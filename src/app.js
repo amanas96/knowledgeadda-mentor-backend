@@ -2,10 +2,12 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import dotenv from "dotenv";
+dotenv.config();
 
 // Import Routes
-import mentorRoutes from "./routes/mentor.routes.js";
-import documentRoutes from "./routes/document.routes.js";
+import mentorRoutes from "./routes/mentorRoutes.js";
+import documentRoutes from "./routes/documentRoutes.js";
 
 const app = express();
 
@@ -14,6 +16,7 @@ app.use(helmet()); // Security headers
 app.use(cors()); // Allow frontend requests
 app.use(express.json()); // Parse JSON bodies
 app.use(morgan("dev")); // Logger
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
 // --- Routes ---
 app.use("/api/mentor", mentorRoutes);

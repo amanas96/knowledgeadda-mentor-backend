@@ -1,6 +1,6 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { z } from "zod";
-import { StructuredOutputParser } from "langchain/output_parsers";
+import { StructuredOutputParser } from "@langchain/core/output_parsers";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import config from "../../config/index.js";
@@ -29,10 +29,10 @@ const parser = StructuredOutputParser.fromZodSchema(quizSchema);
 
 // 2. Initialize Gemini Model
 const model = new ChatGoogleGenerativeAI({
-  modelName: config.llm.models.quiz, // 'gemini-1.5-flash'
+  model: "gemini-1.5-flash",
   maxOutputTokens: 2048,
-  temperature: 0.2, // Low temperature for consistent formatting
-  apiKey: config.llm.googleApiKey,
+  temperature: 0.2,
+  apiKey: process.env.GOOGLE_API_KEY, // ✅ Direct env variable
 });
 
 // 3. Create the Prompt Template

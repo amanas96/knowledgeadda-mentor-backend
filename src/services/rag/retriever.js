@@ -1,39 +1,77 @@
-import { Pinecone } from "@pinecone-database/pinecone";
-import { PineconeStore } from "@langchain/community/vectorstores/pinecone";
+import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import config from "../../config/index.js";
+import { PineconeStore } from "@langchain/pinecone"; // ✅ Your stability fix
+import { pineconeIndex } from "../../config/pinecone.js";
+import dotenv from "dotenv";
+dotenv.config();
 
-let vectorStoreInstance = null;
+// --- 1. Initialize Embeddings Strategy ---
+const initializeEmbeddings = () => {
+  const embeddingProvider = process.env.EMBEDDING_PROVIDER || "google";
 
-export const initVectorStore = async () => {
-  if (vectorStoreInstance) {
-    return vectorStoreInstance;
+  if (embeddingProvider === "openai") {
+    console.log("📊 Using OpenAI Embeddings (High Precision)");
+    return new OpenAIEmbeddings({
+      modelName: "text-embedding-3-small",
+      apiKey: process.env.OPENAI_API_KEY,
+      batchSize: 512,
+    });
+  } else {
+    console.log("📊 Using Google Embeddings (Cost Effective)");
+    return new GoogleGenerativeAIEmbeddings({
+      modelName: "text-embedding-004",
+      apiKey: process.env.GOOGLE_API_KEY,
+      taskType: "retrieval_document",
+    });
   }
+};
 
+export const embeddings = initializeEmbeddings();
+
+// --- 2. The Smart Retriever (MMR & Filtering) ---
+export const getRetriever = async (options = {}) => {
   try {
-    // 1. Initialize Pinecone Client
-    const pinecone = new Pinecone({
-      apiKey: config.vectorDB.apiKey,
-    });
+    const {
+      topK = 5,
+      namespace = undefined,
+      searchType = "mmr", // Default to Diversity search
+      filter = undefined,
+    } = options;
 
-    const pineconeIndex = pinecone.Index(config.vectorDB.indexName);
-
-    // 2. Initialize Embeddings (Architecture Recommendation 3)
-    const embeddings = new OpenAIEmbeddings({
-      modelName: "text-embedding-3-small", // 1536 dimensions, highly efficient
-      openAIApiKey: config.llm.openaiApiKey,
-    });
-
-    // 3. Connect to existing Pinecone Index
-    vectorStoreInstance = await PineconeStore.fromExistingIndex(embeddings, {
+    const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
       pineconeIndex,
-      maxConcurrency: 5, // Optimized for serverless
+      namespace,
+      textKey: "text",
+      filter,
     });
 
-    console.log("✅ Vector Store connected: Pinecone Serverless");
-    return vectorStoreInstance;
+    if (searchType === "mmr") {
+      // MMR ensures we don't get 5 versions of the same paragraph
+      return vectorStore.asRetriever({
+        searchType: "mmr",
+        k: topK,
+        searchKwargs: {
+          fetchK: topK * 4,
+          lambda: 0.5,
+        },
+      });
+    } else {
+      return vectorStore.asRetriever({
+        searchType: "similarity",
+        k: topK,
+        filter,
+      });
+    }
   } catch (error) {
-    console.error("❌ Failed to init Vector Store:", error);
-    throw error;
+    console.error("❌ Retriever Init Error:", error.message);
+    throw new Error("Failed to initialize RAG retriever");
   }
+};
+
+// --- 3. Direct Store Access (For Uploads) ---
+export const getVectorStore = async () => {
+  return await PineconeStore.fromExistingIndex(embeddings, {
+    pineconeIndex,
+    textKey: "text",
+  });
 };

@@ -6,11 +6,31 @@ import {
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { RunnableSequence } from "@langchain/core/runnables";
 import config from "../../config/index.js";
+import dotenv from "dotenv";
+dotenv.config();
+
+// --- 🔍 DEBUG: API KEY CHECKER ---
+console.log("-------------------------------------------------");
+console.log("🔍 DEBUGGING API KEYS:");
+
+const checkKey = (name, value) => {
+  if (!value) {
+    console.error(`❌ ${name} is MISSING or UNDEFINED!`);
+  } else {
+    // Show only first 4 chars for safety (e.g., "gsk_...")
+    console.log(`✅ ${name} is loaded: ${value.substring(0, 4)}...`);
+  }
+};
+
+checkKey("GROQ_API_KEY", process.env.GROQ_API_KEY);
+checkKey("GOOGLE_API_KEY", process.env.GOOGLE_API_KEY);
+console.log("-------------------------------------------------");
+// -------------------------------------------------
 
 // 1. Initialize Groq Model
 const model = new ChatGroq({
   apiKey: config.llm.groqApiKey,
-  modelName: config.llm.models.explanation, // 'llama3-70b-8192'
+  model: process.env.EXPLANATION_MODEL || "llama-3.3-70b-versatile",
   temperature: 0.5, // Balanced for creativity and accuracy
   maxTokens: 1024,
 });
