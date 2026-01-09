@@ -1,10 +1,10 @@
 import express from "express";
-import { handleQuery } from "../controllers/mentorController.js";
+import { handleChat } from "../controllers/chatController.js";
+import protect from "../middlewares/auth.js";
 
 const router = express.Router();
 
-// POST /api/mentor/query
-// Body: { "query": "Explain Article 21", "sessionId": "optional-uuid" }
-router.post("/query", handleQuery);
+// POST /api/mentor/chat
+router.post("/chat", handleChat);
 
 export default router;

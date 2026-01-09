@@ -1,4 +1,4 @@
-const jwt = require("jsonwebtoken");
+import jwt from "jsonwebtoken";
 import asynchandler from "express-async-handler";
 
 const protect = asynchandler((req, res, next) => {
@@ -69,4 +69,4 @@ const protect = asynchandler((req, res, next) => {
   }
 });
 
-module.exports = protect;
+export default protect;

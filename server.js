@@ -1,25 +1,26 @@
 import app from "./src/app.js";
-import config from "./src/config/index.js";
-import { mentorService } from "./src/services/mentor/mentorService.js";
+import connectDB from "./src/config/db.js";
+import dotenv from "dotenv";
+dotenv.config();
+
+const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
     console.log("🚀 Starting UPSC Mentor Service...");
 
-    // 1. Initialize AI Services (Lazy load Vector DB connection)
-    await mentorService.initialize();
+    // 1. Connect to Database
+    await connectDB();
 
     // 2. Start Express Server
-    app.listen(config.app.port, () => {
-      console.log(`\n✅ Server is running on port: ${config.app.port}`);
+    // Note: mentorService does not need explicit initialization anymore.
+    app.listen(PORT, () => {
+      console.log(`\n✅ Server is running on port: ${PORT}`);
       console.log(
-        `   - Health Check: http://localhost:${config.app.port}/health`
+        `   - Mentor API:   http://localhost:${PORT}/api/mentor/query`
       );
       console.log(
-        `   - Mentor API:   http://localhost:${config.app.port}/api/mentor/query`
-      );
-      console.log(
-        `   - Upload API:   http://localhost:${config.app.port}/api/documents/upload\n`
+        `   - Upload API:   http://localhost:${PORT}/api/documents/upload\n`
       );
     });
   } catch (error) {

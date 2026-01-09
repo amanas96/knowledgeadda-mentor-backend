@@ -1,6 +1,9 @@
 import { documentProcessor } from "../services/rag/documentProcessor.js";
 
 export const uploadDocument = async (req, res) => {
+  console.log("📨 Header Content-Type:", req.headers["content-type"]);
+  console.log("📥 Request Body:", req.body);
+  console.log("📂 Request File:", req.file);
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No PDF file provided" });
