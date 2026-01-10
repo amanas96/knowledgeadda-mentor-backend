@@ -12,11 +12,16 @@ import documentRoutes from "./routes/documentRoutes.js";
 const app = express();
 
 // --- Middleware ---
-app.use(helmet()); // Security headers
-app.use(cors()); // Allow frontend requests
-app.use(express.json()); // Parse JSON bodies
-app.use(morgan("dev")); // Logger
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+app.use(helmet());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
+app.use(express.json());
+app.use(morgan("dev"));
+app.use(express.urlencoded({ extended: true }));
 
 // --- Routes ---
 app.use("/api/mentor", mentorRoutes);

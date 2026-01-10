@@ -1,42 +1,53 @@
 import mongoose from "mongoose";
 
-const chatSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
-    index: true,
-  },
+const chatSchema = new mongoose.Schema(
+  {
+    // --- 1. Identity & Session ---
+    // We use String to allow both Real IDs and Guest IDs
+    userId: {
+      type: String,
+      required: true,
+      index: true, // ⚡ Critical for fast Rate Limiting checks
+    },
+    sessionId: {
+      type: String,
+      required: true,
+      index: true,
+    },
+    isGuest: {
+      type: Boolean,
+      default: false,
+    },
 
-  // The User's input
-  query: {
-    type: String,
-    required: true,
-  },
+    // --- 2. The Conversation ---
+    query: {
+      type: String,
+      required: true,
+    },
+    response: {
+      type: String, // Stores the explanation text OR the JSON Quiz string
+      required: true,
+    },
 
-  // The AI's output (can be text or a stringified JSON of the quiz)
-  response: {
-    type: mongoose.Schema.Types.Mixed, // Allows storing Object or String
-    required: true,
-  },
+    // --- 3. AI Metadata ---
+    intent: {
+      type: String,
+      enum: ["QUIZ", "EXPLAIN", "CONVERSATION", "UNCLEAR"], // Helps with analytics
+      default: "EXPLAIN",
+    },
 
-  // Classification of the interaction
-  intent: {
-    type: String,
-    enum: ["QUIZ", "EXPLAIN", "UNKNOWN"],
-    default: "EXPLAIN",
+    // Citations (Where did the AI get the answer?)
+    sources: [
+      {
+        title: String,
+        url: String,
+      },
+    ],
   },
-
-  // Metadata for performance tracking (optional)
-  tokensUsed: {
-    type: Number,
-    default: 0,
-  },
-
-  createdAt: {
-    type: Date,
-    default: Date.now,
-    expires: "30d", // Optional: Auto-delete chat history after 30 days to save space
-  },
-});
+  {
+    timestamps: true,
+    collection: "mentor_chats",
+  }
+);
 
 export const Chat = mongoose.model("Chat", chatSchema);
