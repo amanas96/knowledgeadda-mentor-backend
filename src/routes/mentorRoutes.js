@@ -1,10 +1,12 @@
 import express from "express";
-import { handleChat } from "../controllers/chatController.js";
-import protect from "../middlewares/auth.js";
-
+import {
+  handleQuery,
+  getChatHistory,
+} from "../controllers/mentorController.js";
 const router = express.Router();
 
 // POST /api/mentor/chat
-router.post("/chat", handleChat);
+router.post("/chat", handleQuery);
+router.get("/history/:sessionId", getChatHistory);
 
 export default router;
